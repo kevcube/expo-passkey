@@ -10,7 +10,7 @@ import { ERROR_CODES, ERROR_MESSAGES } from "../../types/errors";
 import type { Logger } from "../utils/logger";
 import { revokePasskeySchema } from "../utils/schema";
 
-import type { AuthPasskey, ResolvedSchemaConfig } from "../../types";
+import type { Passkey, ResolvedSchemaConfig } from "../../types";
 
 /**
  * Create endpoint to revoke a passkey
@@ -68,47 +68,37 @@ export const createRevokeEndpoint = (options: {
       },
     },
     async (ctx) => {
-      const { userId, credentialId, reason } = ctx.body;
+      const { userId, credentialID } = ctx.body;
 
       try {
-        logger.debug("Revoking passkey", { userId, credentialId });
+        logger.debug("Deleting passkey", { userId, credentialID });
 
-        // Find the active credential for the provided credential ID and user ID
-        const credential = await ctx.context.adapter.findOne<AuthPasskey>({
-          model: schemaConfig.authPasskeyModel,
+        // Find the credential for the provided credential ID and user ID
+        const credential = await ctx.context.adapter.findOne<Passkey>({
+          model: schemaConfig.passkeyModel,
           where: [
-            { field: "credentialId", operator: "eq", value: credentialId },
+            { field: "credentialID", operator: "eq", value: credentialID },
             { field: "userId", operator: "eq", value: userId },
-            { field: "status", operator: "eq", value: "active" },
           ],
         });
 
         if (!credential) {
-          logger.warn("Revoke failed: Passkey not found", { credentialId });
+          logger.warn("Delete failed: Passkey not found", { credentialID });
           throw new APIError("NOT_FOUND", {
             code: ERROR_CODES.SERVER.CREDENTIAL_NOT_FOUND,
             message: ERROR_MESSAGES[ERROR_CODES.SERVER.CREDENTIAL_NOT_FOUND],
           });
         }
 
-        const now = new Date().toISOString();
-
-        // Update the credential to revoked status
-        await ctx.context.adapter.update({
-          model: schemaConfig.authPasskeyModel,
+        // Delete the credential
+        await ctx.context.adapter.delete({
+          model: schemaConfig.passkeyModel,
           where: [{ field: "id", operator: "eq", value: credential.id }],
-          update: {
-            status: "revoked",
-            revokedAt: now,
-            revokedReason: reason || "user_initiated",
-            updatedAt: now,
-          },
         });
 
-        logger.info("Passkey revoked successfully", {
+        logger.info("Passkey deleted successfully", {
           userId,
-          credentialId,
-          reason: reason || "user_initiated",
+          credentialID,
         });
 
         return ctx.json({ success: true });

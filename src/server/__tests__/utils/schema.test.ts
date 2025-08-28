@@ -149,18 +149,17 @@ describe("Schema definitions", () => {
     it("should validate correct data", () => {
       const validData = {
         userId: "user-123",
-        credentialId: "credential-123",
-        reason: "lost_device",
+        credentialID: "credential-123",
       };
 
       const result = revokePasskeySchema.safeParse(validData);
       expect(result.success).toBe(true);
     });
 
-    it("should allow omitting reason", () => {
+    it("should validate minimal required data", () => {
       const dataWithoutReason = {
         userId: "user-123",
-        credentialId: "credential-123",
+        credentialID: "credential-123",
       };
 
       const result = revokePasskeySchema.safeParse(dataWithoutReason);
@@ -170,13 +169,13 @@ describe("Schema definitions", () => {
     it("should reject missing required fields", () => {
       // Missing userId
       const invalidData1 = {
-        credentialId: "credential-123",
+        credentialID: "credential-123",
       };
 
       const result1 = revokePasskeySchema.safeParse(invalidData1);
       expect(result1.success).toBe(false);
 
-      // Missing credentialId
+      // Missing credentialID
       const invalidData2 = {
         userId: "user-123",
       };

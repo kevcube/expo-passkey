@@ -1,5 +1,5 @@
 import type { AuthContext, BetterAuthPlugin } from "better-auth/types";
-import { ERROR_CODES, type AuthPasskey } from "../../types";
+import { ERROR_CODES, type Passkey } from "../../types";
 import { expoPasskey } from "../core";
 import { createLogger, createRateLimits, setupCleanupJob } from "../utils";
 
@@ -132,7 +132,7 @@ describe("expoPasskey server plugin", () => {
     expect(plugin).toBeDefined();
     expect(plugin.id).toBe("expo-passkey");
     expect(plugin.schema).toBeDefined();
-    expect(plugin.schema.authPasskey).toBeDefined();
+    expect(plugin.schema.passkey).toBeDefined();
     expect(plugin.endpoints).toBeDefined();
     expect(plugin.endpoints.passkeyChallenges).toBeDefined();
     expect(plugin.endpoints.registerPasskey).toBeDefined();
@@ -207,7 +207,7 @@ describe("expoPasskey server plugin", () => {
       validOptions.cleanup,
       expect.anything(), // logger
       {
-        authPasskeyModel: "authPasskey",
+        passkeyModel: "passkey",
         passkeyChallengeModel: "passkeyChallenge",
       }, // default schemaConfig
     );
@@ -217,7 +217,7 @@ describe("expoPasskey server plugin", () => {
     const customOptions = {
       ...validOptions,
       schema: {
-        authPasskey: {
+        passkey: {
           modelName: "customPasskeyTable",
         },
         passkeyChallenge: {
@@ -239,36 +239,33 @@ describe("expoPasskey server plugin", () => {
       customOptions.cleanup,
       expect.anything(), // logger
       {
-        authPasskeyModel: "customPasskeyTable",
+        passkeyModel: "customPasskeyTable",
         passkeyChallengeModel: "customChallengeTable",
       }, // custom schemaConfig
     );
   });
 
-  it("should define proper authPasskey schema", () => {
+  it("should define proper passkey schema", () => {
     const plugin = expoPasskey(validOptions) as BetterAuthPlugin & {
       schema: NonNullable<BetterAuthPlugin["schema"]>;
     };
-    const schema = plugin.schema.authPasskey;
+    const schema = plugin.schema.passkey;
 
     // Check that model name is correct
-    expect(schema.modelName).toBe("authPasskey");
+    expect(schema.modelName).toBe("passkey");
 
-    // Get field keys from AuthPasskey type, excluding the 'id' which is auto-generated
-    type AuthPasskeySchemaFields = Omit<AuthPasskey, "id">;
-    const expectedFields: Array<keyof AuthPasskeySchemaFields | string> = [
-      "userId",
-      "credentialId",
+    // Get field keys from Passkey type, excluding the 'id' which is auto-generated
+    type PasskeySchemaFields = Omit<Passkey, "id">;
+    const expectedFields: Array<keyof PasskeySchemaFields | string> = [
+      "name",
       "publicKey",
+      "userId",
+      "credentialID",
       "counter",
-      "platform",
-      "lastUsed",
-      "status",
+      "deviceType",
+      "backedUp",
+      "transports",
       "createdAt",
-      "updatedAt",
-      "revokedAt",
-      "revokedReason",
-      "metadata",
       "aaguid",
     ];
 
@@ -283,8 +280,8 @@ describe("expoPasskey server plugin", () => {
       field: "id",
       onDelete: "cascade",
     });
-    expect(schema.fields.credentialId.unique).toBe(true);
-    expect(schema.fields.status.defaultValue).toBe("active");
+    expect(schema.fields.credentialID.unique).toBe(true);
+    expect(schema.fields.counter.defaultValue).toBe(0);
   });
 
   it("should define correct middleware for route protection", () => {

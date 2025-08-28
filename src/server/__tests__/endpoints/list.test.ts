@@ -13,7 +13,7 @@ const mockLogger = {
 
 // Default schema config
 const defaultSchemaConfig: ResolvedSchemaConfig = {
-  authPasskeyModel: "authPasskey",
+  passkeyModel: "passkey",
   passkeyChallengeModel: "passkeyChallenge",
 };
 
@@ -30,25 +30,29 @@ describe("listPasskeys endpoint", () => {
   const mockPasskeys = [
     {
       id: "passkey-1",
+      name: "iPhone 14",
+      publicKey: "sample-public-key-1",
       userId: "user-123",
-      credentialId: "credential-1",
-      platform: "ios",
-      status: "active",
-      lastUsed: "2023-02-01T00:00:00Z",
-      createdAt: "2023-01-01T00:00:00Z",
-      updatedAt: "2023-02-01T00:00:00Z",
-      metadata: '{"deviceName":"iPhone 14"}',
+      credentialID: "credential-1",
+      counter: 5,
+      deviceType: "ios",
+      backedUp: true,
+      transports: "hybrid,internal",
+      createdAt: new Date("2023-01-01T00:00:00Z"),
+      aaguid: "sample-aaguid-1",
     },
     {
       id: "passkey-2",
+      name: undefined,
+      publicKey: "sample-public-key-2",
       userId: "user-123",
-      credentialId: "credential-2",
-      platform: "android",
-      status: "active",
-      lastUsed: "2023-01-15T00:00:00Z",
-      createdAt: "2023-01-10T00:00:00Z",
-      updatedAt: "2023-01-15T00:00:00Z",
-      metadata: '{"deviceName":"Pixel 7"}',
+      credentialID: "credential-2",
+      counter: 3,
+      deviceType: "android",
+      backedUp: false,
+      transports: "internal",
+      createdAt: new Date("2023-01-10T00:00:00Z"),
+      aaguid: "sample-aaguid-2",
     },
   ];
 
@@ -91,12 +95,11 @@ describe("listPasskeys endpoint", () => {
 
     // Verify database query uses default model name
     expect(mockCtx.context.adapter.findMany).toHaveBeenCalledWith({
-      model: "authPasskey",
+      model: "passkey",
       where: [
         { field: "userId", operator: "eq", value: "user-123" },
-        { field: "status", operator: "eq", value: "active" },
       ],
-      sortBy: { field: "lastUsed", direction: "desc" },
+      sortBy: { field: "createdAt", direction: "desc" },
       limit: 11, // limit + 1 for pagination
       offset: 0,
     });
@@ -106,11 +109,15 @@ describe("listPasskeys endpoint", () => {
       passkeys: expect.arrayContaining([
         expect.objectContaining({
           id: "passkey-1",
-          metadata: { deviceName: "iPhone 14" },
+          name: "iPhone 14",
+          credentialID: "credential-1",
+          deviceType: "ios",
         }),
         expect.objectContaining({
           id: "passkey-2",
-          metadata: { deviceName: "Pixel 7" },
+          name: null,
+          credentialID: "credential-2",
+          deviceType: "android",
         }),
       ]),
       nextOffset: undefined, // No pagination for just 2 results with limit 10
@@ -129,7 +136,7 @@ describe("listPasskeys endpoint", () => {
 
   it("should use custom schema config model names", async () => {
     const customSchemaConfig: ResolvedSchemaConfig = {
-      authPasskeyModel: "customPasskeyTable",
+      passkeyModel: "customPasskeyTable",
       passkeyChallengeModel: "customChallengeTable",
     };
 
@@ -153,9 +160,8 @@ describe("listPasskeys endpoint", () => {
       model: "customPasskeyTable",
       where: [
         { field: "userId", operator: "eq", value: "user-123" },
-        { field: "status", operator: "eq", value: "active" },
       ],
-      sortBy: { field: "lastUsed", direction: "desc" },
+      sortBy: { field: "createdAt", direction: "desc" },
       limit: 11, // limit + 1 for pagination
       offset: 0,
     });
@@ -167,14 +173,16 @@ describe("listPasskeys endpoint", () => {
       .fill(0)
       .map((_, i) => ({
         id: `passkey-${i + 1}`,
+        name: `Device ${i + 1}`,
+        publicKey: `public-key-${i + 1}`,
         userId: "user-123",
-        credentialId: `credential-${i + 1}`,
-        platform: i % 2 === 0 ? "ios" : "android",
-        status: "active",
-        lastUsed: `2023-02-0${Math.min(i + 1, 9)}T00:00:00Z`,
-        createdAt: "2023-01-01T00:00:00Z",
-        updatedAt: `2023-02-0${Math.min(i + 1, 9)}T00:00:00Z`,
-        metadata: `{"deviceName":"Device ${i + 1}"}`,
+        credentialID: `credential-${i + 1}`,
+        counter: i,
+        deviceType: i % 2 === 0 ? "ios" : "android",
+        backedUp: i % 2 === 0,
+        transports: "internal",
+        createdAt: new Date(`2023-02-0${Math.min(i + 1, 9)}T00:00:00Z`),
+        aaguid: `aaguid-${i + 1}`,
       }));
 
     // Mock database response with more passkeys than the limit
@@ -188,12 +196,11 @@ describe("listPasskeys endpoint", () => {
 
     // Verify database query
     expect(mockCtx.context.adapter.findMany).toHaveBeenCalledWith({
-      model: "authPasskey",
+      model: "passkey",
       where: [
         { field: "userId", operator: "eq", value: "user-123" },
-        { field: "status", operator: "eq", value: "active" },
       ],
-      sortBy: { field: "lastUsed", direction: "desc" },
+      sortBy: { field: "createdAt", direction: "desc" },
       limit: 11, // limit + 1 for pagination check
       offset: 0,
     });

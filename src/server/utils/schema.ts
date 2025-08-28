@@ -56,16 +56,6 @@ export const registerPasskeySchema = z.object({
       .optional(),
   }),
   platform: z.string(),
-  metadata: z
-    .object({
-      deviceName: z.string().optional(),
-      deviceModel: z.string().optional(),
-      appVersion: z.string().optional(),
-      manufacturer: z.string().optional(),
-      biometricType: z.string().optional(),
-      lastLocation: z.string().optional(),
-    })
-    .optional(),
 });
 
 /**
@@ -118,6 +108,5 @@ export const listPasskeysParamsSchema = z.object({
  */
 export const revokePasskeySchema = z.object({
   userId: z.string(),
-  credentialId: z.string(),
-  reason: z.string().optional(),
+  credentialID: z.string(),
 });

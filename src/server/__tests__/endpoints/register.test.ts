@@ -22,7 +22,7 @@ const mockLogger = {
 
 // Default schema config
 const defaultSchemaConfig: ResolvedSchemaConfig = {
-  authPasskeyModel: "authPasskey",
+  passkeyModel: "passkey",
   passkeyChallengeModel: "passkeyChallenge",
 };
 
@@ -117,7 +117,7 @@ describe("registerPasskey endpoint", () => {
 
   it("should use custom schema config model names", async () => {
     const customSchemaConfig: ResolvedSchemaConfig = {
-      authPasskeyModel: "customPasskeyTable",
+      passkeyModel: "customPasskeyTable",
       passkeyChallengeModel: "customChallengeTable",
     };
 

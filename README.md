@@ -264,9 +264,9 @@ export const auth = betterAuth({
         disableInterval: false,  // Set to true in serverless environments
       },
       schema: {
-        authPasskey: { modelName: "user_passkeys" },
+        passkey: { modelName: "user_passkeys" },
         passkeyChallenge: { modelName: "auth_challenges" }
-  }
+      }
     })
   ]
 });
@@ -659,24 +659,21 @@ await registerPasskey({
 
 The plugin uses a unified table structure that works seamlessly across all platforms.
 
-### authPasskey Table
+### passkey Table
 
 | **Field Name**    | **Type**                | **Key** | **Description**                                      |
 |-------------------|-------------------------|---------|------------------------------------------------------|
 | `id`              | `string`                | PK      | Unique identifier for each passkey                   |
-| `userId`          | `string`                | FK      | The ID of the user (references `user.id`)            |
-| `credentialId`    | `string`                | UQ      | Unique identifier of the generated credential        |
+| `name`            | `string` (optional)     | -       | User-friendly name for the passkey                  |
 | `publicKey`       | `string`                | -       | Base64 encoded public key                            |
+| `userId`          | `string`                | FK      | The ID of the user (references `user.id`)           |
+| `credentialID`    | `string`                | UQ      | Unique identifier of the generated credential        |
 | `counter`         | `number`                | -       | For WebAuthn signature verification                  |
-| `platform`        | `string`                | -       | Platform on which the passkey is registered          |
-| `lastUsed`        | `string`                | -       | Time the passkey was last used                       |
-| `status`          | `string`                | -       | Status of the passkey (active/revoked)               |
-| `createdAt`       | `string`                | -       | Time when the passkey was created                    |
-| `updatedAt`       | `string`                | -       | Time when the passkey was last updated               |
-| `revokedAt`       | `string` (optional)     | -       | Timestamp when the passkey was revoked (if any)      |
-| `revokedReason`   | `string` (optional)     | -       | Reason for revocation (if any)                       |
-| `metadata`        | `string` (JSON)         | -       | JSON string containing metadata about the device and client preferences |
-| `aaguid`          | `string`                | -       | Authenticator Attestation Globally Unique Identifier |
+| `deviceType`      | `string`                | -       | Type of device (ios, android, windows, etc.)        |
+| `backedUp`        | `boolean`               | -       | Whether the credential is backed up                  |
+| `transports`      | `string` (optional)     | -       | Comma-separated list of transport methods           |
+| `createdAt`       | `date`                  | -       | When the passkey was created                         |
+| `aaguid`          | `string` (optional)     | -       | Authenticator Attestation Globally Unique Identifier |
 
 ### passkeyChallenge Table
 
@@ -707,7 +704,7 @@ export const auth = betterAuth({
       rpName: "Your App Name",
       // ✨ Custom schema configuration
       schema: {
-        authPasskey: {
+        passkey: {
           modelName: "user_passkeys" // Custom table name for passkeys
         },
         passkeyChallenge: {
@@ -722,7 +719,7 @@ export const auth = betterAuth({
 
 If no custom schema is provided, the plugin uses these default table names:
 
-- **Passkeys**: `authPasskey`
+- **Passkeys**: `passkey`
 - **Challenges**: `passkeyChallenge`
 
 

@@ -111,17 +111,16 @@ export interface AuthenticatePasskeyResult {
 export interface ListPasskeysSuccessResponse {
   passkeys: Array<{
     id: string;
+    name?: string;
+    publicKey: string;
     userId: string;
-    credentialId: string;
-    platform: string;
-    lastUsed: string;
-    status: "active" | "revoked";
+    credentialID: string;
+    counter: number;
+    deviceType: string;
+    backedUp: boolean;
+    transports?: string;
+    createdAt: Date;
     aaguid?: string;
-    createdAt: string;
-    updatedAt: string;
-    revokedAt?: string;
-    revokedReason?: string;
-    metadata: Record<string, unknown>;
   }>;
   nextOffset?: number;
 }

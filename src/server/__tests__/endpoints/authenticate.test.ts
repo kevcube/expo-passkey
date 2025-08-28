@@ -19,7 +19,7 @@ const mockLogger = {
 
 // Default schema config
 const defaultSchemaConfig: ResolvedSchemaConfig = {
-  authPasskeyModel: "authPasskey",
+  passkeyModel: "passkey",
   passkeyChallengeModel: "passkeyChallenge",
 };
 
@@ -122,7 +122,7 @@ describe("authenticatePasskey endpoint", () => {
 
   it("should use custom schema config model names", async () => {
     const customSchemaConfig: ResolvedSchemaConfig = {
-      authPasskeyModel: "customPasskeyTable",
+      passkeyModel: "customPasskeyTable",
       passkeyChallengeModel: "customChallengeTable",
     };
 
@@ -147,8 +147,7 @@ describe("authenticatePasskey endpoint", () => {
     expect(mockCtx.context.adapter.findOne).toHaveBeenCalledWith({
       model: "customPasskeyTable",
       where: [
-        { field: "credentialId", operator: "eq", value: "test-credential-id" },
-        { field: "status", operator: "eq", value: "active" },
+        { field: "credentialID", operator: "eq", value: "test-credential-id" },
       ],
     });
   });

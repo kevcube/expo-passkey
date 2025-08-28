@@ -9,7 +9,7 @@ import { z } from "zod";
  * Schema configuration for the Expo Passkey plugin
  */
 export interface ExpoPasskeySchemaConfig {
-  authPasskey?: {
+  passkey?: {
     modelName?: string;
   };
   passkeyChallenge?: {
@@ -72,27 +72,24 @@ export interface ExpoPasskeyOptions {
  * Internal configuration with resolved model names
  */
 export interface ResolvedSchemaConfig {
-  authPasskeyModel: string;
+  passkeyModel: string;
   passkeyChallengeModel: string;
 }
 
 /**
- * Database schema for the authPasskey model
+ * Database schema for the passkey model
  */
-export const authPasskeySchema = z.object({
+export const passkeySchema = z.object({
   id: z.string(),
-  userId: z.string(),
-  credentialId: z.string(),
+  name: z.string().optional(),
   publicKey: z.string(),
+  userId: z.string(),
+  credentialID: z.string(),
   counter: z.number().default(0),
-  platform: z.string(),
-  lastUsed: z.string(),
-  status: z.enum(["active", "revoked"]).default("active"),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  revokedAt: z.string().optional(),
-  revokedReason: z.string().optional(),
-  metadata: z.string().optional(),
+  deviceType: z.string(),
+  backedUp: z.boolean(),
+  transports: z.string().optional(),
+  createdAt: z.date(),
   aaguid: z.string().optional(),
 });
 
@@ -109,8 +106,8 @@ export const passkeyChallengeSchema = z.object({
   registrationOptions: z.string().optional(), // JSON string containing client registration preferences
 });
 
-/** AuthPasskey model type */
-export type AuthPasskey = z.infer<typeof authPasskeySchema>;
+/** Passkey model type */
+export type Passkey = z.infer<typeof passkeySchema>;
 
 /** PasskeyChallenge model type */
 export type PasskeyChallenge = z.infer<typeof passkeyChallengeSchema>;

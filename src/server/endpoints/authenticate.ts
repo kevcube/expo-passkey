@@ -19,7 +19,7 @@ import type { Logger } from "../utils/logger";
 import { authenticatePasskeySchema } from "../utils/schema";
 
 import type {
-  AuthPasskey,
+  Passkey,
   PasskeyChallenge,
   ResolvedSchemaConfig,
 } from "../../types";
@@ -97,18 +97,17 @@ export const createAuthenticateEndpoint = (options: {
       },
     },
     async (ctx) => {
-      const { credential, metadata } = ctx.body;
+      const { credential } = ctx.body;
       const credentialId = credential?.id;
 
       try {
         logger.debug("WebAuthn authentication attempt:", { credentialId });
 
         // Find the credential by its ID
-        const passkey = await ctx.context.adapter.findOne<AuthPasskey>({
-          model: schemaConfig.authPasskeyModel,
+        const passkey = await ctx.context.adapter.findOne<Passkey>({
+          model: schemaConfig.passkeyModel,
           where: [
-            { field: "credentialId", operator: "eq", value: credentialId },
-            { field: "status", operator: "eq", value: "active" },
+            { field: "credentialID", operator: "eq", value: credentialId },
           ],
         });
 
@@ -190,7 +189,7 @@ export const createAuthenticateEndpoint = (options: {
             expectedRPID: rpId,
             requireUserVerification: true,
             credential: {
-              id: passkey.credentialId,
+              id: passkey.credentialID,
               publicKey: isoBase64URL.toBuffer(passkey.publicKey),
               counter: passkey.counter,
             },
@@ -221,22 +220,13 @@ export const createAuthenticateEndpoint = (options: {
             });
           }
 
-          const now = new Date().toISOString();
-
-          // Update passkey metadata and counter
+          // Update passkey counter
           await ctx.context.adapter.update({
-            model: schemaConfig.authPasskeyModel,
+            model: schemaConfig.passkeyModel,
             where: [{ field: "id", operator: "eq", value: passkey.id }],
             update: {
-              lastUsed: now,
-              updatedAt: now,
               // Update counter from authentication response
               counter: verification.authenticationInfo.newCounter,
-              metadata: JSON.stringify({
-                ...JSON.parse(passkey.metadata || "{}"),
-                ...metadata,
-                lastAuthenticationAt: now,
-              }),
             },
           });
 
