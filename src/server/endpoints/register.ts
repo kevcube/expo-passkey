@@ -103,7 +103,7 @@ export const createRegisterEndpoint = (options: {
       },
     },
     async (ctx) => {
-      const { userId, credential, platform, metadata } = ctx.body;
+      const { userId, credential, platform } = ctx.body;
 
       try {
         logger.debug("WebAuthn registration attempt:", {

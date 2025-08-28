@@ -97,7 +97,7 @@ export const createAuthenticateEndpoint = (options: {
       },
     },
     async (ctx) => {
-      const { credential, metadata } = ctx.body;
+      const { credential } = ctx.body;
       const credentialId = credential?.id;
 
       try {

@@ -68,7 +68,7 @@ export const createRevokeEndpoint = (options: {
       },
     },
     async (ctx) => {
-      const { userId, credentialID, reason } = ctx.body;
+      const { userId, credentialID } = ctx.body;
 
       try {
         logger.debug("Deleting passkey", { userId, credentialID });
