@@ -16,7 +16,7 @@ import { ERROR_CODES, ERROR_MESSAGES } from "../../types/errors";
 import type { Logger } from "../utils/logger";
 import { registerPasskeySchema } from "../utils/schema";
 import type {
-  AuthPasskey,
+  Passkey,
   PasskeyChallenge,
   ResolvedSchemaConfig,
 } from "../../types/server";
@@ -240,11 +240,11 @@ export const createRegisterEndpoint = (options: {
 
           // Check if credential already exists
           const existingCredentials =
-            await ctx.context.adapter.findMany<AuthPasskey>({
-              model: schemaConfig.authPasskeyModel,
+            await ctx.context.adapter.findMany<Passkey>({
+              model: schemaConfig.passkeyModel,
               where: [
                 {
-                  field: "credentialId",
+                  field: "credentialID",
                   operator: "eq",
                   value: credentialIdStr,
                 },
@@ -255,89 +255,49 @@ export const createRegisterEndpoint = (options: {
           const existingCredential =
             existingCredentials.length > 0 ? existingCredentials[0] : null;
 
-          const now = new Date().toISOString();
-
-          // Prepare enhanced metadata with client preferences
-          const enhancedMetadata = {
-            ...metadata,
-            // Add information about client preferences used during registration
-            registrationPreferences: {
-              attestation: registrationOptions.attestation || "none",
-              userVerification: userVerificationRequirement,
-              authenticatorAttachment:
-                registrationOptions.authenticatorSelection
-                  ?.authenticatorAttachment,
-              residentKey:
-                registrationOptions.authenticatorSelection?.residentKey,
-              requireResidentKey:
-                registrationOptions.authenticatorSelection?.requireResidentKey,
-            },
-            registeredAt: now,
-            verificationSettings: {
-              requireUserVerification,
-              expectedOrigins: expectedOrigins,
-              rpId,
-            },
-          };
-
           if (existingCredential) {
-            // If the existing credential is already active, throw error
-            if (existingCredential.status === "active") {
-              logger.warn("Registration failed: Credential already exists", {
-                credentialId: credentialIdStr,
-              });
-              throw new APIError("BAD_REQUEST", {
-                code: ERROR_CODES.SERVER.CREDENTIAL_EXISTS,
-                message: ERROR_MESSAGES[ERROR_CODES.SERVER.CREDENTIAL_EXISTS],
-              });
-            }
-
-            // Update the existing revoked credential
-            logger.info("Reactivating previously revoked passkey", {
+            // If credential already exists, update it (overwrite the existing passkey)
+            logger.info("Updating existing passkey", {
               credentialId: credentialIdStr,
-              previousStatus: existingCredential.status,
-              clientPreferences: registrationOptions,
             });
 
             await ctx.context.adapter.update({
-              model: schemaConfig.authPasskeyModel,
+              model: schemaConfig.passkeyModel,
               where: [
                 { field: "id", operator: "eq", value: existingCredential.id },
               ],
               update: {
-                userId,
-                platform,
-                lastUsed: now,
-                status: "active",
-                updatedAt: now,
+                name: undefined, // Will be set later via update endpoint if user wants
                 publicKey: publicKeyStr,
+                userId,
+                credentialID: credentialIdStr,
                 counter: 0,
+                deviceType: platform,
+                backedUp: verification.registrationInfo?.credentialBackedUp || false,
+                transports: credential.response.transports?.join(',') || undefined,
+                createdAt: new Date(),
                 aaguid: aaguidStr,
-                revokedAt: null,
-                revokedReason: null,
-                metadata: JSON.stringify(enhancedMetadata),
               },
             });
           } else {
-            // Create new passkey record if one doesn't exist
+            // Create new passkey record
             await ctx.context.adapter.create({
-              model: schemaConfig.authPasskeyModel,
+              model: schemaConfig.passkeyModel,
               data: {
                 id: ctx.context.generateId({
-                  model: schemaConfig.authPasskeyModel,
+                  model: schemaConfig.passkeyModel,
                   size: 32,
                 }),
-                userId,
-                credentialId: credentialIdStr,
+                name: undefined, // Will be set later via update endpoint if user wants
                 publicKey: publicKeyStr,
+                userId,
+                credentialID: credentialIdStr,
                 counter: 0,
-                platform,
+                deviceType: platform,
+                backedUp: verification.registrationInfo?.credentialBackedUp || false,
+                transports: credential.response.transports?.join(',') || undefined,
+                createdAt: new Date(),
                 aaguid: aaguidStr,
-                lastUsed: now,
-                status: "active",
-                createdAt: now,
-                updatedAt: now,
-                metadata: JSON.stringify(enhancedMetadata),
               },
             });
           }
@@ -351,15 +311,8 @@ export const createRegisterEndpoint = (options: {
           logger.info("WebAuthn passkey registration successful", {
             userId,
             credentialId: credentialIdStr,
-            platform,
+            deviceType: platform,
             isUpdate: !!existingCredential,
-            clientPreferences: {
-              userVerification: userVerificationRequirement,
-              attestation: registrationOptions.attestation || "none",
-              authenticatorAttachment:
-                registrationOptions.authenticatorSelection
-                  ?.authenticatorAttachment,
-            },
           });
 
           return ctx.json({

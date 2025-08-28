@@ -132,7 +132,7 @@ describe("expoPasskey server plugin", () => {
     expect(plugin).toBeDefined();
     expect(plugin.id).toBe("expo-passkey");
     expect(plugin.schema).toBeDefined();
-    expect(plugin.schema.authPasskey).toBeDefined();
+    expect(plugin.schema.passkey).toBeDefined();
     expect(plugin.endpoints).toBeDefined();
     expect(plugin.endpoints.passkeyChallenges).toBeDefined();
     expect(plugin.endpoints.registerPasskey).toBeDefined();

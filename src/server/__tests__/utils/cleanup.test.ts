@@ -232,7 +232,7 @@ describe("Cleanup utility", () => {
 
       // Verify info was logged
       expect(mockLogger.info).toHaveBeenCalledWith(
-        "Cleaned up 5 inactive passkeys",
+        "Cleaned up 5 old passkeys",
       );
     } finally {
       // Restore environment
