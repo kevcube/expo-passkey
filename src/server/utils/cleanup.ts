@@ -40,7 +40,7 @@ export const setupCleanupJob = (
 
   const performCleanup = async () => {
     // Safety check to ensure adapter is available and properly initialized
-    if (!ctx.adapter || typeof ctx.adapter.updateMany !== "function") {
+    if (!ctx.adapter || typeof ctx.adapter.deleteMany !== "function") {
       logger.warn("Skipping cleanup: Database adapter not fully initialized");
       return;
     }
@@ -49,26 +49,19 @@ export const setupCleanupJob = (
     inactiveCutoff.setDate(inactiveCutoff.getDate() - inactiveDays);
 
     try {
-      const result = await ctx.adapter.updateMany({
-        model: schemaConfig.authPasskeyModel,
+      const result = await ctx.adapter.deleteMany({
+        model: schemaConfig.passkeyModel,
         where: [
           {
-            field: "lastUsed",
+            field: "createdAt",
             operator: "lt",
-            value: inactiveCutoff.toISOString(),
+            value: inactiveCutoff,
           },
-          { field: "status", operator: "eq", value: "active" },
         ],
-        update: {
-          status: "revoked",
-          revokedAt: new Date().toISOString(),
-          revokedReason: "automatic_inactive",
-          updatedAt: new Date().toISOString(),
-        },
       });
 
       if (process.env.NODE_ENV !== "production") {
-        logger.info(`Cleaned up ${result} inactive passkeys`);
+        logger.info(`Cleaned up ${result} old passkeys`);
       }
     } catch (error) {
       logger.error("Cleanup job failed:", error);

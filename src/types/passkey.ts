@@ -5,7 +5,7 @@
 
 import type { AuthenticationType } from "expo-local-authentication";
 
-import type { AuthPasskey } from "./server";
+import type { Passkey } from "./server";
 
 /**
  * Platform type for passkey registration
@@ -63,7 +63,7 @@ export interface DeviceInfo {
  * Passkey state used for managing passkeys in UI applications
  */
 export interface PasskeyState {
-  passkeys: AuthPasskey[];
+  passkeys: Passkey[];
   loading: boolean;
   error: string | null;
   isSupported: boolean;

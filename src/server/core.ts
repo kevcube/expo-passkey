@@ -37,7 +37,7 @@ function resolveSchemaConfig(
   options: ExpoPasskeyOptions,
 ): ResolvedSchemaConfig {
   return {
-    authPasskeyModel: options.schema?.authPasskey?.modelName || "authPasskey",
+    passkeyModel: options.schema?.passkey?.modelName || "passkey",
     passkeyChallengeModel:
       options.schema?.passkeyChallenge?.modelName || "passkeyChallenge",
   };
@@ -99,9 +99,17 @@ export const expoPasskey = (options: ExpoPasskeyOptions): BetterAuthPlugin => {
 
     // Database schema for plugin
     schema: {
-      [schemaConfig.authPasskeyModel]: {
-        modelName: schemaConfig.authPasskeyModel,
+      [schemaConfig.passkeyModel]: {
+        modelName: schemaConfig.passkeyModel,
         fields: {
+          name: {
+            type: "string",
+            required: false,
+          },
+          publicKey: {
+            type: "string",
+            required: true,
+          },
           userId: {
             type: "string",
             required: true,
@@ -111,55 +119,34 @@ export const expoPasskey = (options: ExpoPasskeyOptions): BetterAuthPlugin => {
               onDelete: "cascade",
             },
           },
-          credentialId: {
+          credentialID: {
             type: "string",
             required: true,
             unique: true,
           },
-          publicKey: {
-            type: "string", // Base64 encoded public key
-            required: true,
-          },
           counter: {
-            type: "number", // For WebAuthn signature verification
+            type: "number",
             required: true,
             defaultValue: 0,
           },
-          platform: {
+          deviceType: {
             type: "string",
             required: true,
           },
-          lastUsed: {
-            type: "string",
+          backedUp: {
+            type: "boolean",
             required: true,
           },
-          status: {
+          transports: {
             type: "string",
-            required: true,
-            defaultValue: "active",
+            required: false,
           },
           createdAt: {
-            type: "string",
-            required: true,
-          },
-          updatedAt: {
-            type: "string",
-            required: true,
-          },
-          revokedAt: {
-            type: "string",
-            required: false,
-          },
-          revokedReason: {
-            type: "string",
-            required: false,
-          },
-          metadata: {
-            type: "string",
+            type: "date",
             required: false,
           },
           aaguid: {
-            type: "string", // For identifying the provider (e.g., Google, Apple)
+            type: "string",
             required: false,
           },
         },

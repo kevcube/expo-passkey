@@ -118,6 +118,6 @@ export const listPasskeysParamsSchema = z.object({
  */
 export const revokePasskeySchema = z.object({
   userId: z.string(),
-  credentialId: z.string(),
+  credentialID: z.string(),
   reason: z.string().optional(),
 });

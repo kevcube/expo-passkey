@@ -13,7 +13,7 @@ import {
   listPasskeysQuerySchema,
 } from "../utils/schema";
 
-import type { AuthPasskey, ResolvedSchemaConfig } from "../../types";
+import type { Passkey, ResolvedSchemaConfig } from "../../types";
 
 /**
  * Create endpoint to list user passkeys
@@ -49,41 +49,21 @@ export const createListEndpoint = (options: {
                           type: "object",
                           properties: {
                             id: { type: "string" },
+                            name: { type: "string", nullable: true },
+                            publicKey: { type: "string" },
                             userId: { type: "string" },
-                            credentialId: { type: "string" },
-                            platform: { type: "string" },
-                            lastUsed: {
-                              type: "string",
-                              format: "date-time",
-                            },
-                            status: {
-                              type: "string",
-                              enum: ["active", "revoked"],
-                            },
-                            aaguid: {
-                              type: "string",
-                              nullable: true,
-                            },
+                            credentialID: { type: "string" },
+                            counter: { type: "number" },
+                            deviceType: { type: "string" },
+                            backedUp: { type: "boolean" },
+                            transports: { type: "string", nullable: true },
                             createdAt: {
                               type: "string",
                               format: "date-time",
                             },
-                            updatedAt: {
-                              type: "string",
-                              format: "date-time",
-                            },
-                            revokedAt: {
-                              type: "string",
-                              format: "date-time",
-                              nullable: true,
-                            },
-                            revokedReason: {
+                            aaguid: {
                               type: "string",
                               nullable: true,
-                            },
-                            metadata: {
-                              type: "object",
-                              additionalProperties: true,
                             },
                           },
                         },
@@ -142,13 +122,12 @@ export const createListEndpoint = (options: {
         }
 
         // Fetch passkeys with pagination
-        const passkeys = await ctx.context.adapter.findMany<AuthPasskey>({
-          model: schemaConfig.authPasskeyModel,
+        const passkeys = await ctx.context.adapter.findMany<Passkey>({
+          model: schemaConfig.passkeyModel,
           where: [
             { field: "userId", operator: "eq", value: userId },
-            { field: "status", operator: "eq", value: "active" },
           ],
-          sortBy: { field: "lastUsed", direction: "desc" },
+          sortBy: { field: "createdAt", direction: "desc" },
           limit: limit + 1,
           offset,
         });
@@ -160,19 +139,16 @@ export const createListEndpoint = (options: {
         // Format passkeys for response
         const formattedPasskeys = results.map((passkey) => ({
           id: passkey.id,
+          name: passkey.name || null,
+          publicKey: passkey.publicKey,
           userId: passkey.userId,
-          credentialId: passkey.credentialId,
-          platform: passkey.platform,
-          lastUsed: passkey.lastUsed,
-          status: passkey.status,
-          aaguid: passkey.aaguid || null,
+          credentialID: passkey.credentialID,
+          counter: passkey.counter,
+          deviceType: passkey.deviceType,
+          backedUp: passkey.backedUp,
+          transports: passkey.transports || null,
           createdAt: passkey.createdAt,
-          updatedAt: passkey.updatedAt,
-          revokedAt: passkey.revokedAt,
-          revokedReason: passkey.revokedReason,
-          metadata: passkey.metadata
-            ? JSON.parse(passkey.metadata as string)
-            : {},
+          aaguid: passkey.aaguid || null,
         }));
 
         logger.debug("Returning passkeys:", {
